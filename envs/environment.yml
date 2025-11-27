@@ -1,0 +1,16 @@
+name: ml-price-classification
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  # Opcional pero útil
+  - ipykernel
+  - jupyterlab
+  - ipywidgets

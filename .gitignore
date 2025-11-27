@@ -1,0 +1,48 @@
+# --- Python / general ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.pyo
+*.py.rej
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+.virtual_documents/
+
+# --- Entorns / paquets ---
+.venv/
+.env
+.conda/
+conda-meta/
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+
+# --- Editors / SO ---
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# --- Tests / cobertura / tmp ---
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+*.tmp
+*.cache/
+.cache/
+
+# --- ML / tracking típics ---
+wandb/
+mlruns/
+runs/
+tensorboard/
+.checkpoints/
+
+# --- Whitelists útiles ---
+# Asegura que los environment.yml se versionan siempre, incluso si una regla general los afectara.
+!**/environment.yml
