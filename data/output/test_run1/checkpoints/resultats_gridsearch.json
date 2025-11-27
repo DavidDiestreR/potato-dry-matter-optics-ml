@@ -1,0 +1,218 @@
+{
+  "data_execucio": "2025-11-27 13:50:56",
+  "millor_config_id": 1,
+  "resultats": [
+    {
+      "config_id": 1,
+      "config": {
+        "arquitectura": [
+          32,
+          16
+        ],
+        "learning_rate": 0.001,
+        "dropout_rate": 0.1,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_1_arch_32_16.h5",
+      "mape": 0.0038956500500524987,
+      "rmse": 0.10095643754347061,
+      "mae": 0.08868942260742152,
+      "r2": 0.9915766923293647,
+      "val_loss_final": 0.00470902631059289,
+      "epochs_entrenats": 32
+    },
+    {
+      "config_id": 2,
+      "config": {
+        "arquitectura": [
+          64,
+          32
+        ],
+        "learning_rate": 0.001,
+        "dropout_rate": 0.2,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_2_arch_64_32.h5",
+      "mape": 0.005286055535468051,
+      "rmse": 0.16384594536175776,
+      "mae": 0.11808071136474574,
+      "r2": 0.977813641478109,
+      "val_loss_final": 0.012403389438986778,
+      "epochs_entrenats": 35
+    },
+    {
+      "config_id": 3,
+      "config": {
+        "arquitectura": [
+          64,
+          32,
+          16
+        ],
+        "learning_rate": 0.001,
+        "dropout_rate": 0.2,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_3_arch_64_32_16.h5",
+      "mape": 0.014056976491516661,
+      "rmse": 0.3356051867087532,
+      "mae": 0.33085212707519496,
+      "r2": 0.9069166600447791,
+      "val_loss_final": 0.05203849822282791,
+      "epochs_entrenats": 70
+    },
+    {
+      "config_id": 4,
+      "config": {
+        "arquitectura": [
+          128,
+          64,
+          32
+        ],
+        "learning_rate": 0.0005,
+        "dropout_rate": 0.2,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_4_arch_128_64_32.h5",
+      "mape": 0.00942034846616813,
+      "rmse": 0.21976881772763432,
+      "mae": 0.21970996856689418,
+      "r2": 0.9600840221112379,
+      "val_loss_final": 0.02231515571475029,
+      "epochs_entrenats": 52
+    },
+    {
+      "config_id": 5,
+      "config": {
+        "arquitectura": [
+          128,
+          64,
+          32,
+          16
+        ],
+        "learning_rate": 0.001,
+        "dropout_rate": 0.3,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_5_arch_128_64_32_16.h5",
+      "mape": 0.010433859103790962,
+      "rmse": 0.24398274302166387,
+      "mae": 0.24224720001220668,
+      "r2": 0.9508036538079543,
+      "val_loss_final": 0.027503523975610733,
+      "epochs_entrenats": 62
+    },
+    {
+      "config_id": 6,
+      "config": {
+        "arquitectura": [
+          64,
+          128,
+          64,
+          32
+        ],
+        "learning_rate": 0.0005,
+        "dropout_rate": 0.25,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_6_arch_64_128_64_32.h5",
+      "mape": 0.011212872162800827,
+      "rmse": 0.26231783467377395,
+      "mae": 0.26218852996826136,
+      "r2": 0.9431316972000516,
+      "val_loss_final": 0.03179245442152023,
+      "epochs_entrenats": 52
+    },
+    {
+      "config_id": 7,
+      "config": {
+        "arquitectura": [
+          64,
+          32,
+          16
+        ],
+        "learning_rate": 0.01,
+        "dropout_rate": 0.2,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_7_arch_64_32_16.h5",
+      "mape": 0.009272237180561627,
+      "rmse": 0.25731354574146414,
+      "mae": 0.20946559906005824,
+      "r2": 0.9452807761801284,
+      "val_loss_final": 0.030591048300266266,
+      "epochs_entrenats": 31
+    },
+    {
+      "config_id": 8,
+      "config": {
+        "arquitectura": [
+          64,
+          32,
+          16
+        ],
+        "learning_rate": 0.0001,
+        "dropout_rate": 0.2,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_8_arch_64_32_16.h5",
+      "mape": 0.017071663804227487,
+      "rmse": 0.4891623709250116,
+      "mae": 0.4110589981079098,
+      "r2": 0.8022480784058026,
+      "val_loss_final": 0.1105540469288826,
+      "epochs_entrenats": 200
+    },
+    {
+      "config_id": 9,
+      "config": {
+        "arquitectura": [
+          64,
+          32,
+          16
+        ],
+        "learning_rate": 0.001,
+        "dropout_rate": 0.4,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_9_arch_64_32_16.h5",
+      "mape": 0.012141532754815143,
+      "rmse": 0.2984817630892547,
+      "mae": 0.28729019165039027,
+      "r2": 0.9263707744653966,
+      "val_loss_final": 0.0411626473069191,
+      "epochs_entrenats": 84
+    },
+    {
+      "config_id": 10,
+      "config": {
+        "arquitectura": [
+          128,
+          128,
+          64,
+          32,
+          16
+        ],
+        "learning_rate": 0.0005,
+        "dropout_rate": 0.3,
+        "batch_size": 3,
+        "epochs": 200
+      },
+      "checkpoint_path": "data/output/test_run1\\checkpoints\\config_10_arch_128_128_64_32_16.h5",
+      "mape": 0.015383180415978342,
+      "rmse": 0.41401299839969735,
+      "mae": 0.36808071136474574,
+      "r2": 0.8583415183108198,
+      "val_loss_final": 0.07919469475746155,
+      "epochs_entrenats": 60
+    }
+  ]
+}
