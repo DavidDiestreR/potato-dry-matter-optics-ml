@@ -1,0 +1,3 @@
+id_mostra,ruta_imatges,color_promig_R,color_promig_G,color_promig_B,desviació_R,desviació_G,desviació_B,canal_NIR,MS_experimental,MS_predit,lot,data,Error_absolut,Error_percentual
+2,data/images/L1_2.png,162.9,136.4,101.2,11.8,9.6,7.9,0.755,22.3,24.570724,L1,2025-03-01,2.270724487304687,10.182621019303529
+9,data/images/L4_9.png,176.5,148.2,112.3,9.8,8.1,6.9,0.781,24.5,22.72696,L4,2025-03-15,1.773040771484375,7.23690110809949
