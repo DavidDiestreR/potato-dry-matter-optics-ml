@@ -16,7 +16,7 @@ def potato_defect_classification(image):
     pass
 
 
-def potato_min_square(image):
+def potato_min_square(image, margin=0):
     """
     Calcula el quadrat mínim (bounding box) que conté la patata a la imatge.
 
@@ -24,5 +24,7 @@ def potato_min_square(image):
     ----------
     image : Any
         Objecte imatge ja carregat.
+    margin : int, optional
+        Màrgen addicional al quadrat mínim (per defecte és 0).
     """
     pass
