@@ -4,7 +4,7 @@ Funcions relacionades amb el preprocés de la il·luminació (RGB i NIR).
 """
 
 
-def preprocess_rgb_img(image):
+def potato_pixels_rgb_img(image, margin=0, save_img=False):
     """
     Preprocessa la imatge en el rang visible (RGB).
 

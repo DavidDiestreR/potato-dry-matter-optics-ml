@@ -9,9 +9,11 @@ dependencies:
   - notebook
   - ipykernel
   - numpy
-  - pillow
+  - pillow # AÑADIR AL ENV GENERAL
   - matplotlib
   - pip:
-      - inference          # SDK de Roboflow para correr modelos en local/hosted
+      - inference          # SDK de Roboflow para correr modelos en local/hosted | AÑADIR AL ENV GENERAL
+
+      # ELIMINAR
       - supervision        # Para visualizar resultados si quieres
       - opencv-python      # Para dibujar cajas, lectura de imagen, etc.
