@@ -1,30 +1,30 @@
-name: prediccio_ms_patates
+name: ms_patates_gpu
 channels:
   - conda-forge
   - defaults
 dependencies:
   # Python
   - python=3.10
-  
+
+  # CUDA + cuDNN per TensorFlow 2.10 en Windows
+  - cudatoolkit=11.2
+  - cudnn=8.1.0
+
   # Ciència de dades i ML
   - numpy=1.24.3
   - pandas=2.0.3
   - scikit-learn=1.3.0
-  
+
   # Visualització
   - matplotlib=3.7.2
   - seaborn=0.12.2
-  
-  # Utilitats
-  - jupyter
-  - notebook
-  - ipykernel>=6.29
-  - ipywidgets
-  - typing_extensions>=4.8
-  
-  # Pip packages (si es necessita alguna cosa extra)
+
+  # Jupyter
+  - jupyter=1.0.0
+  - ipykernel=6.25.0
+
+  # Pip packages
   - pip
   - pip:
-    # TensorFlow i Keras
-    - tensorflow==2.13.0
-    - protobuf==3.20.3  # Per compatibilitat amb TensorFlow
+      - tensorflow==2.10.0
+      - typing_extensions>=4.4

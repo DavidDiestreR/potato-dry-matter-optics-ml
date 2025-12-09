@@ -1,0 +1,17 @@
+name: potato-detection
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - jupyterlab
+  - notebook
+  - ipykernel
+  - numpy
+  - pillow
+  - matplotlib
+  - pip:
+      - inference          # SDK de Roboflow para correr modelos en local/hosted
+      - supervision        # Para visualizar resultados si quieres
+      - opencv-python      # Para dibujar cajas, lectura de imagen, etc.
