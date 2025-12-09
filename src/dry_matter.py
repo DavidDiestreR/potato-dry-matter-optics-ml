@@ -94,36 +94,6 @@ def predict_dm(
         Predicció de matèria seca en percentatge (%).
         - Si l'entrada és una sola mostra (dict o array 1D): retorna float
         - Si l'entrada són múltiples mostres (DataFrame o array 2D): retorna np.ndarray
-        
-    Exemples
-    --------
-    Predicció per una sola mostra (diccionari):
-    
-    >>> features_dict = {
-    ...     'color_promig_R': 123.45,
-    ...     'color_promig_G': 98.76,
-    ...     'color_promig_B': 87.65,
-    ...     'desviació_R': 12.34,
-    ...     'desviació_G': 10.23,
-    ...     'desviació_B': 9.87,
-    ...     'canal_NIR': 234.56
-    ... }
-    >>> ms_pred = predict_dm(features_dict, scaler, model)
-    >>> print(f"Matèria seca predita: {ms_pred:.2f}%")
-    
-    Predicció per múltiples mostres (DataFrame):
-    
-    >>> df_test = pd.DataFrame({
-    ...     'color_promig_R': [123.45, 130.21],
-    ...     'color_promig_G': [98.76, 105.43],
-    ...     'color_promig_B': [87.65, 92.11],
-    ...     'desviació_R': [12.34, 11.89],
-    ...     'desviació_G': [10.23, 9.75],
-    ...     'desviació_B': [9.87, 10.12],
-    ...     'canal_NIR': [234.56, 241.32]
-    ... })
-    >>> ms_preds = predict_dm(df_test, scaler, model)
-    >>> print(f"Prediccions: {ms_preds}")
     
     Notes
     -----
@@ -197,119 +167,26 @@ def predict_dm(
         return y_pred
 
 
-def predict_dm_batch(
-    df: pd.DataFrame,
-    scaler: Any,
-    model: Any,
-    output_csv: str = None
-) -> pd.DataFrame:
-    """
-    Prediu la matèria seca per un lot de mostres i retorna/guarda els resultats.
-    
-    Paràmetres
-    ----------
-    df : pd.DataFrame
-        DataFrame amb les característiques de les mostres
-    scaler : sklearn.preprocessing.Scaler
-        Scaler entrenat
-    model : keras.Model
-        Model entrenat
-    output_csv : str, opcional
-        Ruta on guardar els resultats. Si és None, no es guarda
-        
-    Retorna
-    -------
-    pd.DataFrame
-        DataFrame original amb columna 'MS_predit' afegida
-        
-    Exemple
-    -------
-    >>> df_test = pd.read_csv('data/test_samples.csv')
-    >>> df_resultats = predict_dm_batch(
-    ...     df_test, scaler, model,
-    ...     output_csv='data/prediccions.csv'
-    ... )
-    """
-    # Fer còpia per no modificar l'original
-    df_result = df.copy()
-    
-    # Fer prediccions
-    prediccions = predict_dm(df, scaler, model)
-    
-    # Afegir prediccions al DataFrame
-    df_result['MS_predit'] = prediccions
-    
-    # Guardar si s'especifica ruta
-    if output_csv:
-        df_result.to_csv(output_csv, index=False)
-        print(f"✓ Prediccions guardades a '{output_csv}'")
-    
-    return df_result
-
-
-# Exemple d'ús del mòdul
-if __name__ == "__main__":
-    """
-    Exemple d'ús de les funcions de predicció.
-    """
-    
-    # Rutes als fitxers del model
-    MODEL_PATH = "data/output/test_run_2/model_prediccio_ms.h5"
-    SCALER_PATH = "data/output/test_run_2/scaler_X.pkl"
-    
-    # Carregar model i scaler
-    print("Carregant model i scaler...")
-    model, scaler = load_model_and_scaler(MODEL_PATH, SCALER_PATH)
-    print("✓ Model i scaler carregats correctament\n")
-    
-    # EXEMPLE 1: Predicció per una sola mostra (diccionari)
-    print("=" * 70)
-    print("EXEMPLE 1: Predicció per una sola mostra (diccionari)")
-    print("=" * 70)
-    
-    features_sample = {
-        'color_promig_R': 123.45,
-        'color_promig_G': 98.76,
-        'color_promig_B': 87.65,
-        'desviació_R': 12.34,
-        'desviació_G': 10.23,
-        'desviació_B': 9.87,
-        'canal_NIR': 234.56
-    }
-    
-    ms_pred = predict_dm(features_sample, scaler, model)
-    print(f"Features: {features_sample}")
-    print(f"\n→ Matèria seca predita: {ms_pred:.2f}%\n")
-    
-    # EXEMPLE 2: Predicció per múltiples mostres (DataFrame)
-    print("=" * 70)
-    print("EXEMPLE 2: Predicció per múltiples mostres (DataFrame)")
-    print("=" * 70)
-    
-    df_test = pd.DataFrame({
-        'id_mostra': ['PAT_001', 'PAT_002', 'PAT_003'],
-        'color_promig_R': [123.45, 130.21, 115.67],
-        'color_promig_G': [98.76, 105.43, 92.34],
-        'color_promig_B': [87.65, 92.11, 83.21],
-        'desviació_R': [12.34, 11.89, 13.45],
-        'desviació_G': [10.23, 9.75, 11.02],
-        'desviació_B': [9.87, 10.12, 9.34],
-        'canal_NIR': [234.56, 241.32, 228.91]
-    })
-    
-    df_resultats = predict_dm_batch(df_test, scaler, model)
-    print("\nResultats:")
-    print(df_resultats[['id_mostra', 'MS_predit']])
-    print("\n" + "=" * 70)
-
-
-def dry_matter_quality_classification(dm_value):
+def dry_matter_quality_classification(dm_value: float) -> str:
     """
     Classifica la qualitat de la patata en funció de la matèria seca.
 
     Paràmetres
     ----------
     dm_value : float
-        Valor de matèria seca (% o la unitat que decidiu).
+        Valor de matèria seca (%).
+
+    Retorna
+    -------
+    str
+        Categoria de qualitat:
+        - "descartada" si dm_value < 19
+        - "preu rebaixat" si 19 <= dm_value <= 20
+        - "bona" si dm_value > 20
     """
-    pass
+    if dm_value < 19:
+        return "descartada"
+    elif 19 <= dm_value <= 20:
+        return "preu rebaixat"
+    else:
+        return "bona"
