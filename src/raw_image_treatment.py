@@ -3,32 +3,107 @@ Mòdul: raw_image_treatment
 Funcions relacionades amb el preprocés de la il·luminació (RGB i NIR).
 """
 
-from http import client
-from typing import Tuple, Optional, Any, List, Dict
+#from http import client
+from typing import Tuple, Optional, Any, List, Dict, Union
 from pathlib import Path
 import os
-
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 from inference_sdk import InferenceHTTPClient
+import cv2
+import supervision as sv
+from roboflow import Roboflow
+from contextlib import redirect_stdout
+import io
+import tempfile
 
 
-def potato_defect_classification(image: Any, confidence_threshold: float = 0.40) -> Tuple[object, Image.Image]:
+def apply_brightness_and_gamma(
+    image: Union[str, Path, os.PathLike, Image.Image, np.ndarray],
+    brightness: float = 2.0,
+    gamma: float = 0.8,
+) -> Image.Image:
+    """
+    Aplica brightness i correcció gamma a una imatge RGB.
+
+    Paràmetres
+    ----------
+    image : str | pathlib.Path | PIL.Image.Image | np.ndarray
+        Ruta a la imatge RGB al disc o objecte imatge (PIL / numpy).
+    brightness : float
+        Factor de brightness (per defecte 2.0).
+    gamma : float
+        Gamma (per defecte 0.8). (arr ** gamma)
+
+    Retorna
+    -------
+    PIL.Image.Image
+        Imatge RGB amb brightness i gamma aplicats.
+    """
+
+    def _to_pil_image(img_in) -> Image.Image:
+        if isinstance(img_in, Image.Image):
+            return img_in.convert("RGB")
+
+        if isinstance(img_in, (str, Path, os.PathLike)):
+            return Image.open(str(img_in)).convert("RGB")
+
+        if isinstance(img_in, np.ndarray):
+            arr = img_in
+            if arr.ndim == 2:
+                arr = np.stack([arr, arr, arr], axis=-1)
+
+            if arr.ndim != 3 or arr.shape[2] not in (3, 4):
+                raise ValueError(f"numpy array amb forma invàlida: {arr.shape}")
+
+            if arr.shape[2] == 4:
+                arr = arr[:, :, :3]
+
+            if arr.dtype != np.uint8:
+                arr = np.clip(arr, 0, 255).astype(np.uint8)
+
+            return Image.fromarray(arr, mode="RGB")
+
+        raise TypeError("`image` ha de ser str/Path, PIL.Image o numpy.ndarray")
+
+    def _gamma_correction(pil_img: Image.Image, g: float) -> Image.Image:
+        arr = np.asarray(pil_img).astype(np.float32) / 255.0
+        arr = arr ** float(g)
+        arr = np.clip(arr * 255.0, 0, 255).astype(np.uint8)
+        return Image.fromarray(arr, mode="RGB")
+
+    pil = _to_pil_image(image)
+
+    # Brightness
+    if brightness is not None:
+        pil = ImageEnhance.Brightness(pil).enhance(float(brightness))
+
+    # Gamma
+    if gamma is not None:
+        pil = _gamma_correction(pil, float(gamma))
+
+    return pil
+
+
+def potato_defect_classification(image: Any, confidence_threshold: float = 0.40
+) -> Tuple[str, float, Image.Image]:
     """
     Classifica el defecte de la patata a partir d'una imatge amb Roboflow i genera
     una imatge de visualització amb bounding box i etiqueta.
 
     Paràmetres
     ----------
-    image : Any
-        Ruta (str/Path), PIL.Image o numpy array.
-    confidence_threshold : float
-        Llindar mínim de confiança per acceptar una predicció.
+    image : str | pathlib.Path | PIL.Image.Image | np.ndarray
+        Ruta a la imatge RGB al disc o objecte imatge (PIL / numpy).
+    confidence_threshold : float, opcional
+        Llindar mínim de confiança per acceptar una predicció. Per defecte 0.40.
 
     Retorna
     -------
-    defect : object
-        Nom del defecte (str) si hi ha detecció >= threshold, si no np.nan.
+    defect : str
+        Nom del defecte si hi ha detecció >= threshold, si no "Unable to classify".
+    confidence : float
+        Confiança de la millor predicció. Si no hi ha predicció vàlida, 0.0.
     vis_img : PIL.Image.Image
         Imatge anotada (bbox + text). Si no detecta res, imatge original.
     """
@@ -72,9 +147,7 @@ def potato_defect_classification(image: Any, confidence_threshold: float = 0.40)
             api_url="https://serverless.roboflow.com",
             api_key=api_key,
         )
-
         return client.infer(pil_img, model_id=ROBOFLOW_MODEL_ID)
-
 
     def _pick_best_prediction(result: Dict[str, Any], thr: float) -> Optional[Dict[str, Any]]:
         """Tria la millor predicció per confiança, si supera thr."""
@@ -89,12 +162,7 @@ def potato_defect_classification(image: Any, confidence_threshold: float = 0.40)
         return best
 
     def _bbox_from_pred(pred: Dict[str, Any]) -> Optional[Tuple[float, float, float, float]]:
-        """
-        Extreu bbox del format típic Roboflow:
-        - (x, y, width, height) centrats
-        O bé:
-        - (x1, y1, x2, y2) si vingués així
-        """
+        """Extreu bbox del format típic Roboflow."""
         if all(k in pred for k in ("x", "y", "width", "height")):
             x = float(pred["x"])
             y = float(pred["y"])
@@ -102,7 +170,6 @@ def potato_defect_classification(image: Any, confidence_threshold: float = 0.40)
             h = float(pred["height"])
             return (x - w / 2.0, y - h / 2.0, x + w / 2.0, y + h / 2.0)
 
-        # fallback per si el teu model retorna cantonades
         if all(k in pred for k in ("x1", "y1", "x2", "y2")):
             return (float(pred["x1"]), float(pred["y1"]), float(pred["x2"]), float(pred["y2"]))
 
@@ -122,28 +189,24 @@ def potato_defect_classification(image: Any, confidence_threshold: float = 0.40)
         conf = float(pred.get("confidence", 0.0))
         label = f"{cls} | conf={conf:.2f} | thr={thr:.2f}"
 
-        # font (default)
         try:
             font = ImageFont.load_default()
         except Exception:
             font = None
 
-        # mida label
         pad = 4
         if font is not None and hasattr(draw, "textbbox"):
             tb = draw.textbbox((0, 0), label, font=font)
             tw, th = tb[2] - tb[0], tb[3] - tb[1]
         else:
-            tw, th = int(draw.textlength(label)), 12  # fallback
+            tw, th = int(draw.textlength(label)), 12
 
-        # posició label (a sobre del bbox si hi ha, sinó a dalt-esquerra)
         if bbox is not None:
             tx = max(0, int(x1))
             ty = max(0, int(y1) - th - 2 * pad)
         else:
             tx, ty = 0, 0
 
-        # caixa negra + text blanc
         draw.rectangle([tx, ty, tx + tw + 2 * pad, ty + th + 2 * pad], fill=(0, 0, 0))
         draw.text((tx + pad, ty + pad), label, fill=(255, 255, 255), font=font)
 
@@ -157,284 +220,184 @@ def potato_defect_classification(image: Any, confidence_threshold: float = 0.40)
 
     best = _pick_best_prediction(result, float(confidence_threshold))
     if best is None:
-        return np.nan, pil_img
+        return "Unable to classify", 0.0, pil_img
 
     vis_img = _draw_annotation(pil_img, best, float(confidence_threshold))
     defect = str(best.get("class", "unknown"))
-    return defect, vis_img
+    conf = float(best.get("confidence", 0.0))
+    return defect, conf, vis_img
 
 
-def potato_pixels_rgb_img(image: Any, margin: int = 0) -> Tuple[Optional[Image.Image], Image.Image]:
+def potato_pixels_rgb_img(image: Any, margin: int = 0, min_conf: float = 0.01
+) -> Tuple[Optional[Image.Image], Image.Image]:
     """
-    Preprocessa la imatge en el rang visible (RGB) amb el model de Roboflow:
-    - Segmenta la patata.
+    Preprocessa la imatge en el rang visible (RGB) utilitzant un model de Roboflow.
+
+    El procediment és el següent:
+    - Segmenta la patata mitjançant *instance segmentation*.
+    - Filtra les deteccions segons la confidence i selecciona la més fiable.
     - Erosiona la màscara amb un marge cap a dins.
-    - Genera una imatge de visualització (contorn original + erosionat + bbox).
-    - Genera una imatge 'cropped' de la patata (fons negre fora de la màscara).
+    - Genera una imatge de visualització amb el contorn original, el contorn erosionat
+      i la *bounding box*.
+    - Genera una imatge retallada (*cropped*) de la patata, amb fons negre fora de la
+      màscara.
 
     Paràmetres
     ----------
     image : str | pathlib.Path | PIL.Image.Image | np.ndarray
-        Ruta a la imatge RGB al disc o objecte imatge (PIL / numpy).
+        Ruta a la imatge RGB al disc o objecte imatge (PIL o numpy).
     margin : int, opcional
-        Mida de l'erosió (en píxels cap a dins). Per defecte 0.
+        Mida de l'erosió cap a dins, en píxels. Per defecte és 0.
+    min_conf : float, opcional
+        Valor mínim de *confidence* (entre 0 i 1) per acceptar una detecció.
+        Per defecte és 0.01.
 
     Retorna
     -------
     cropped_img : PIL.Image.Image o None
-        Imatge retallada de la patata (fora màscara = negre). None si no hi ha màscara.
+        Imatge retallada de la patata, amb el fons negre fora de la màscara.
+        Retorna None si no es detecta cap patata.
     vis_img : PIL.Image.Image
-        Imatge original amb contorns i bounding box pintats.
+        Imatge original amb els contorns i la *bounding box* dibuixats.
     """
 
-    ROBOFLOW_MODEL_ID = "coco-dataset-vdnr1/23"
+    tmp_path = None  # path temporal (PNG RGB) només si cal
 
-    # ------------------------------------------------------------------
-    # Helpers interns
-    # ------------------------------------------------------------------
+    # -------------------------------------------------------------
+    # 0) Carregar ORIGINAL -> PIL i eliminar alfa (treballarem sempre en RGB)
+    # -------------------------------------------------------------
+    if isinstance(image, (str, Path, os.PathLike)):
+        orig_path = str(image)
+        pil_orig = Image.open(orig_path)
+    elif isinstance(image, Image.Image):
+        orig_path = None
+        pil_orig = image
+    elif isinstance(image, np.ndarray):
+        orig_path = None
+        arr = image
+        if arr.ndim == 2:
+            arr = np.stack([arr] * 3, axis=-1)
+        if arr.ndim != 3 or arr.shape[2] not in (3, 4):
+            raise TypeError(f"np.ndarray amb forma invàlida: {arr.shape}")
+        if arr.shape[2] == 4:
+            arr = arr[:, :, :3]
+        if arr.dtype != np.uint8:
+            arr = np.clip(arr, 0, 255).astype(np.uint8)
+        pil_orig = Image.fromarray(arr)
+    else:
+        raise TypeError("image ha de ser path, PIL.Image o np.ndarray")
 
-    def _prediction_to_points(pred: Dict[str, Any]) -> Optional[List[Tuple[float, float]]]:
-        pts = (
-            pred.get("points")
-            or pred.get("polygon")
-            or pred.get("vertices")
-            or pred.get("segmentation")
-        )
-        if not pts:
-            return None
+    # elimina alfa / modes estranys
+    if pil_orig.mode != "RGB":
+        pil_orig = pil_orig.convert("RGB")
 
-        if isinstance(pts, list) and len(pts) > 0:
-            if isinstance(pts[0], dict):
-                out = []
-                for p in pts:
-                    x = p.get("x")
-                    y = p.get("y")
-                    if x is not None and y is not None:
-                        out.append((float(x), float(y)))
-                return out if len(out) >= 3 else None
+    w, h = pil_orig.size
 
-            if isinstance(pts[0], (list, tuple)) and len(pts[0]) >= 2:
-                out = [(float(p[0]), float(p[1])) for p in pts]
-                return out if len(out) >= 3 else None
+    # -------------------------------------------------------------
+    # 1) Decidir infer_path (SEMPRE un PNG RGB si hi ha risc de RGBA)
+    # -------------------------------------------------------------
+    if orig_path is not None:
+        # IMPORTANT: encara que nosaltres hàgim convertit pil_orig,
+        # si passem orig_path, Roboflow re-obrirà el fitxer original (pot ser RGBA).
+        # Per tant, si el fitxer original NO és RGB, creem un PNG RGB temporal.
+        with Image.open(orig_path) as chk:
+            needs_sanitize = (chk.mode != "RGB")
 
-        return None
-
-    def polygon_to_mask(points: List[Tuple[float, float]], w: int, h: int) -> np.ndarray:
-        mask_img = Image.new("L", (w, h), 0)
-        draw = ImageDraw.Draw(mask_img)
-        pts_int = [(int(x), int(y)) for x, y in points]
-        draw.polygon(pts_int, outline=1, fill=1)
-        return np.array(mask_img, dtype=np.uint8)
-
-    def _normalize_mask(m: Any, w: int, h: int) -> Optional[np.ndarray]:
-        if m is None:
-            return None
-
-        if isinstance(m, np.ndarray):
-            arr = m
-        elif isinstance(m, (list, tuple)):
-            arr = np.array(m)
-        elif isinstance(m, dict) and "data" in m:
-            arr = np.array(m["data"])
+        if needs_sanitize:
+            fd, tmp_path = tempfile.mkstemp(suffix=".png")
+            os.close(fd)
+            pil_orig.save(tmp_path, format="PNG", optimize=False)
+            infer_path = tmp_path
         else:
+            infer_path = orig_path
+    else:
+        # no tenim path: forcem PNG temporal RGB
+        fd, tmp_path = tempfile.mkstemp(suffix=".png")
+        os.close(fd)
+        pil_orig.save(tmp_path, format="PNG", optimize=False)
+        infer_path = tmp_path
+
+    try:
+        # -------------------------------------------------------------
+        # 2) Inferència Roboflow (path)
+        # -------------------------------------------------------------
+        with redirect_stdout(io.StringIO()):
+            rf = Roboflow(api_key=os.environ["ROBOFLOW_API_KEY"])
+            project = rf.workspace("microsoft").project("coco-dataset-vdnr1")
+            model = project.version(23).model
+
+        conf_pct = int(min_conf * 100)
+
+        result = model.predict(infer_path, confidence=conf_pct).json()
+        preds = result.get("predictions", [])
+        if not preds:
+            return None, pil_orig
+
+        # -------------------------------------------------------------
+        # 3) Màscara del millor prediction (mateix criteri)
+        # -------------------------------------------------------------
+        best_pred = max(preds, key=lambda p: p["confidence"])
+        points = best_pred.get("points")
+        if not points or len(points) < 3:
+            return None, pil_orig
+
+        mask = np.zeros((h, w), dtype=np.uint8)
+        poly = np.array([[int(p["x"]), int(p["y"])] for p in points], dtype=np.int32)
+        cv2.fillPoly(mask, [poly], 1)
+
+        # -------------------------------------------------------------
+        # 4) Erosió
+        # -------------------------------------------------------------
+        if margin > 0:
+            kernel = np.ones((3, 3), np.uint8)
+            eroded = mask.copy()
+            for _ in range(int(margin)):
+                eroded = cv2.erode(eroded, kernel)
+            mask_eroded = eroded if eroded.sum() > 0 else mask
+        else:
+            mask_eroded = mask
+
+        # -------------------------------------------------------------
+        # 5) Bounding box
+        # -------------------------------------------------------------
+        ys, xs = np.where(mask_eroded > 0)
+        if len(xs) == 0:
+            return None, pil_orig
+
+        x1, x2 = int(xs.min()), int(xs.max()) + 1
+        y1, y2 = int(ys.min()), int(ys.max()) + 1
+
+        # -------------------------------------------------------------
+        # 6) Visualització (RGB)
+        # -------------------------------------------------------------
+        vis_np = np.array(pil_orig).copy()
+
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(vis_np, contours, -1, (255, 0, 0), 2)
+
+        contours_e, _ = cv2.findContours(mask_eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(vis_np, contours_e, -1, (0, 255, 0), 2)
+
+        cv2.rectangle(vis_np, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        vis_img = Image.fromarray(vis_np, mode="RGB")
+
+        # -------------------------------------------------------------
+        # 7) Crop sobre la PNG original (ja en RGB, sense alfa)
+        # -------------------------------------------------------------
+        img_np = np.array(pil_orig)
+        cropped = img_np[y1:y2, x1:x2].copy()
+        cropped_mask = mask_eroded[y1:y2, x1:x2]
+        cropped[cropped_mask == 0] = 0
+        cropped_img = Image.fromarray(cropped, mode="RGB")
+
+        return cropped_img, vis_img
+
+    finally:
+        if tmp_path is not None:
             try:
-                arr = np.array(m)
-            except Exception:
-                return None
-
-        if arr.ndim == 3:
-            if arr.shape[-1] == 1:
-                arr = arr[..., 0]
-            elif arr.shape[0] == 1:
-                arr = arr[0]
-
-        if arr.ndim != 2:
-            return None
-
-        arr = (arr > 0).astype(np.uint8)
-
-        if arr.shape != (h, w):
-            if arr.size == h * w:
-                arr = arr.reshape((h, w))
-            else:
-                mask_img = Image.fromarray(arr * 255)
-                mask_img = mask_img.resize((w, h), resample=Image.NEAREST)
-                arr = (np.array(mask_img) > 0).astype(np.uint8)
-
-        return arr
-
-    def extract_instance_masks_from_result(result: Dict[str, Any], w: int, h: int) -> List[np.ndarray]:
-        masks_local: List[np.ndarray] = []
-        preds = result.get("predictions", []) if isinstance(result, dict) else []
-
-        for pred in preds:
-            points = _prediction_to_points(pred)
-            if points:
-                masks_local.append(polygon_to_mask(points, w, h))
-
-        if masks_local:
-            return masks_local
-
-        for pred in preds:
-            nm = _normalize_mask(
-                pred.get("mask") or pred.get("segmentation_mask"),
-                w,
-                h,
-            )
-            if nm is not None:
-                masks_local.append(nm)
-
-        return masks_local
-
-    def mask_boundary(mask: np.ndarray) -> np.ndarray:
-        m = mask.astype(bool)
-
-        up = np.zeros_like(m)
-        up[1:, :] = m[:-1, :]
-
-        down = np.zeros_like(m)
-        down[:-1, :] = m[1:, :]
-
-        left = np.zeros_like(m)
-        left[:, 1:] = m[:, :-1]
-
-        right = np.zeros_like(m)
-        right[:, :-1] = m[:, 1:]
-
-        interior = up & down & left & right & m
-        boundary = m & (~interior)
-        return boundary.astype(np.uint8)
-
-    def erode_mask(mask: np.ndarray, margin_int: int) -> np.ndarray:
-        if margin_int <= 0:
-            return mask
-
-        eroded = mask.astype(bool)
-
-        for _ in range(margin_int):
-            up = np.pad(eroded[:-1, :], ((1, 0), (0, 0)), constant_values=False)
-            down = np.pad(eroded[1:, :], ((0, 1), (0, 0)), constant_values=False)
-            left = np.pad(eroded[:, :-1], ((0, 0), (1, 0)), constant_values=False)
-            right = np.pad(eroded[:, 1:], ((0, 0), (0, 1)), constant_values=False)
-            eroded = up & down & left & right & eroded
-
-        return eroded.astype(np.uint8)
-
-    def get_mask_bounding_box(mask: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
-        rows, cols = np.where(mask > 0)
-        if len(rows) == 0:
-            return None
-        y1, y2 = int(rows.min()), int(rows.max()) + 1
-        x1, x2 = int(cols.min()), int(cols.max()) + 1
-        return x1, y1, x2, y2
-
-    def _to_pil_rgb(img_in: Any) -> Tuple[Image.Image, Optional[str]]:
-        """
-        Retorna (pil_img_RGB, image_path_if_any).
-        Si és ruta, retorna path; si és objecte, retorna None.
-        """
-        if isinstance(img_in, (str, Path, os.PathLike)):
-            p = str(img_in)
-            return Image.open(p).convert("RGB"), p
-
-        if isinstance(img_in, Image.Image):
-            return img_in.convert("RGB"), None
-
-        if isinstance(img_in, np.ndarray):
-            arr = img_in
-            if arr.ndim == 2:
-                arr = np.stack([arr, arr, arr], axis=-1)
-            if arr.ndim != 3 or arr.shape[2] not in (3, 4):
-                raise TypeError(f"np.ndarray amb forma invàlida: {arr.shape}")
-            if arr.shape[2] == 4:
-                arr = arr[:, :, :3]
-            if arr.dtype != np.uint8:
-                arr = np.clip(arr, 0, 255).astype(np.uint8)
-            return Image.fromarray(arr, "RGB"), None
-
-        raise TypeError("`image` ha de ser str/Path, PIL.Image o np.ndarray.")
-
-    def _infer(client: InferenceHTTPClient, pil_img: Image.Image, image_path: Optional[str]) -> Dict[str, Any]:
-        if image_path is not None:
-            return client.infer(image_path, model_id=ROBOFLOW_MODEL_ID)
-
-        return client.infer(pil_img, model_id=ROBOFLOW_MODEL_ID)
-
-    # -------------------------------------------------------------
-    # 1) Normalitzar entrada i carregar imatge
-    # -------------------------------------------------------------
-    pil_img, image_path = _to_pil_rgb(image)
-    w, h = pil_img.size
-
-    # -------------------------------------------------------------
-    # 2) Inferència amb Roboflow
-    # -------------------------------------------------------------
-    api_key = os.environ["ROBOFLOW_API_KEY"]  # es dona per fet que ja està carregada
-    client = InferenceHTTPClient(
-        api_url="https://serverless.roboflow.com",
-        api_key=api_key,
-    )
-    result = _infer(client, pil_img, image_path)
-
-    # -------------------------------------------------------------
-    # 3) Extreure màscares d'instància
-    # -------------------------------------------------------------
-    masks = extract_instance_masks_from_result(result, w, h)
-
-    if not masks:
-        return None, pil_img
-
-    global_mask = np.zeros((h, w), dtype=np.uint8)
-    for m in masks:
-        global_mask |= (m > 0).astype(np.uint8)
-
-    # -------------------------------------------------------------
-    # 4) Erosió amb marge
-    # -------------------------------------------------------------
-    margin_int = int(margin) if margin is not None else 0
-    eroded_mask = erode_mask(global_mask, margin_int)
-    if eroded_mask.sum() == 0:
-        eroded_mask = global_mask
-
-    global_boundary = mask_boundary(global_mask)
-    eroded_boundary = mask_boundary(eroded_mask)
-
-    bbox = get_mask_bounding_box(eroded_mask)
-    if bbox is None:
-        bbox = get_mask_bounding_box(global_mask)
-
-    # -------------------------------------------------------------
-    # 5) Imatge de visualització
-    # -------------------------------------------------------------
-    vis_img = pil_img.copy()
-    draw = ImageDraw.Draw(vis_img)
-
-    if global_boundary.any():
-        ys, xs = np.where(global_boundary == 1)
-        for x, y in zip(xs.tolist(), ys.tolist()):
-            vis_img.putpixel((x, y), (255, 0, 0))
-
-    if eroded_boundary.any():
-        ys, xs = np.where(eroded_boundary == 1)
-        for x, y in zip(xs.tolist(), ys.tolist()):
-            vis_img.putpixel((x, y), (0, 255, 0))
-
-    if bbox is not None:
-        draw.rectangle(bbox, outline="blue", width=2)
-
-    # -------------------------------------------------------------
-    # 6) Imatge cropped (amb fons negre fora màscara)
-    # -------------------------------------------------------------
-    cropped_img: Optional[Image.Image] = None
-    if bbox is not None:
-        x1, y1, x2, y2 = bbox
-        img_array = np.array(pil_img)
-        cropped_array = img_array[y1:y2, x1:x2].copy()
-        cropped_mask = eroded_mask[y1:y2, x1:x2]
-        cropped_array[cropped_mask == 0] = 0
-        cropped_img = Image.fromarray(cropped_array)
-
-    return cropped_img, vis_img
+                os.remove(tmp_path)
+            except OSError:
+                pass
 
 
 def potato_filter_extreme_colours(image: Image.Image, margin: int = 30, ignore_black: bool = True,
@@ -517,13 +480,34 @@ def potato_filter_extreme_colours(image: Image.Image, margin: int = 30, ignore_b
 
 def nir_scalation(nir, reference_val):
     """
-    Escala/normalitza el canal NIR de la imatge.
+    Escala/normalitza el canal NIR dividint-lo pel valor de referència.
+
+    - Si nir i reference_val són vectors/arrays: divisió element a element.
+    - Si són escalars: divisió escalar.
 
     Paràmetres
     ----------
     nir : Any
-        Canal NIR.
+        Canal NIR (escalar, llista, numpy array).
     reference_val : Any
-        Valor de referència per a l'escala/normalització.
+        Valor(s) de referència per a l'escala (mateixa forma que nir o escalar).
     """
-    pass
+    nir_arr = np.asarray(nir, dtype=np.float32)
+    ref_arr = np.asarray(reference_val, dtype=np.float32)
+
+    # Si tots dos són "vectorials" (ndim > 0), comprovem forma
+    if nir_arr.ndim > 0 and ref_arr.ndim > 0:
+        if nir_arr.shape != ref_arr.shape:
+            raise ValueError(f"nir i reference_val han de tenir la mateixa forma. "
+                             f"Got nir {nir_arr.shape} vs ref {ref_arr.shape}")
+
+    # Evitar divisions per zero
+    if np.any(ref_arr == 0):
+        raise ZeroDivisionError("reference_val conté zeros; no es pot dividir per zero.")
+
+    out = nir_arr / ref_arr
+
+    # Retornem escalar "net" si l'entrada era escalar
+    if out.ndim == 0:
+        return float(out)
+    return out

@@ -1,6 +1,6 @@
 Després de crear l'env, executar amb l'env activat:
 ```
-pip install --upgrade "typing_extensions>=4.9.0"
+pip install --force-reinstall --no-cache-dir numpy==1.24.3
 ```
 
 Al clonar crear un fitxer .env i agefir
