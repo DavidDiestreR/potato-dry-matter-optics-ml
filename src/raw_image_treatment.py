@@ -400,7 +400,7 @@ def potato_pixels_rgb_img(image: Any, margin: int = 0, min_conf: float = 0.01
                 pass
 
 
-def potato_filter_extreme_colours(image: Image.Image, margin: int = 30, ignore_black: bool = True,
+def potato_filter_extreme_colours(image: Image.Image, margin: int = 50, ignore_black: bool = True,
 ) -> Tuple[Image.Image, Tuple[float, float, float]]:
     """
     Filtra la imatge mantenint només els píxels propers al color RGB mediana.
