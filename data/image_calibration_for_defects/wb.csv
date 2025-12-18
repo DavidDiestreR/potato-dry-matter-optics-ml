@@ -1,0 +1,31 @@
+image,lot,source,method,thr,pred_class,confidence,status
+p3_1.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8769911527633667,ok
+p3_2.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8881424069404602,ok
+p3_3.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8318912386894226,ok
+p3_4.png,3,definitive,wb,0.2,Diseased-fungal potato,0.7936767339706421,ok
+p3_5.png,3,definitive,wb,0.2,Diseased-fungal potato,0.5191368460655212,ok
+p3_6.png,3,definitive,wb,0.2,Diseased-fungal potato,0.5678343772888184,ok
+p3_7.png,3,definitive,wb,0.2,Diseased-fungal potato,0.9102110862731934,ok
+p3_8.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8563022017478943,ok
+p3_9.png,3,definitive,wb,0.2,Diseased-fungal potato,0.9358379244804382,ok
+p3_10.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8264052271842957,ok
+p3_11.png,3,definitive,wb,0.2,Diseased-fungal potato,0.851255476474762,ok
+p3_12.png,3,definitive,wb,0.2,Diseased-fungal potato,0.9042399525642395,ok
+p3_13.png,3,definitive,wb,0.2,Diseased-fungal potato,0.6960225105285645,ok
+p3_14.png,3,definitive,wb,0.2,Diseased-fungal potato,0.7412880063056946,ok
+p3_15.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8932712078094482,ok
+p3_16.png,3,definitive,wb,0.2,Diseased-fungal potato,0.9029989242553711,ok
+p3_17.png,3,definitive,wb,0.2,Diseased-fungal potato,0.9109964370727539,ok
+p3_18.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8794299364089966,ok
+p3_19.png,3,definitive,wb,0.2,Diseased-fungal potato,0.520037055015564,ok
+p3_20.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8340513110160828,ok
+p3_21.png,3,definitive,wb,0.2,Potato,0.6676574945449829,ok
+p3_22.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8741728663444519,ok
+p3_23.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8981488347053528,ok
+p3_24.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8260707259178162,ok
+p3_25.png,3,definitive,wb,0.2,Diseased-fungal potato,0.82217937707901,ok
+p3_26.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8208746910095215,ok
+p3_27.png,3,definitive,wb,0.2,Diseased-fungal potato,0.9143545031547546,ok
+p3_28.png,3,definitive,wb,0.2,Diseased-fungal potato,0.8955933451652527,ok
+p3_29.png,3,definitive,wb,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_30.png,3,definitive,wb,0.2,Diseased-fungal potato,0.9068713188171387,ok
