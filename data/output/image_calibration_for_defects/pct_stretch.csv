@@ -1,0 +1,31 @@
+image,lot,source,method,thr,pred_class,confidence,status
+p3_1.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.8220533728599548,ok
+p3_2.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.6194396615028381,ok
+p3_3.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.5271439552307129,ok
+p3_4.png,3,definitive,pct_stretch,0.2,Damaged potato,0.4635518193244934,ok
+p3_5.png,3,definitive,pct_stretch,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_6.png,3,definitive,pct_stretch,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_7.png,3,definitive,pct_stretch,0.2,Damaged potato,0.4984269142150879,ok
+p3_8.png,3,definitive,pct_stretch,0.2,Damaged potato,0.8302026987075806,ok
+p3_9.png,3,definitive,pct_stretch,0.2,Damaged potato,0.5678927302360535,ok
+p3_10.png,3,definitive,pct_stretch,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_11.png,3,definitive,pct_stretch,0.2,Damaged potato,0.7011286020278931,ok
+p3_12.png,3,definitive,pct_stretch,0.2,Damaged potato,0.609717607498169,ok
+p3_13.png,3,definitive,pct_stretch,0.2,Damaged potato,0.5316768288612366,ok
+p3_14.png,3,definitive,pct_stretch,0.2,Damaged potato,0.515787661075592,ok
+p3_15.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.8413739800453186,ok
+p3_16.png,3,definitive,pct_stretch,0.2,Damaged potato,0.6979592442512512,ok
+p3_17.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.7135093808174133,ok
+p3_18.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.5177707076072693,ok
+p3_19.png,3,definitive,pct_stretch,0.2,Damaged potato,0.7740189433097839,ok
+p3_20.png,3,definitive,pct_stretch,0.2,Defected potato,0.4873579740524292,ok
+p3_21.png,3,definitive,pct_stretch,0.2,Defected potato,0.8248434662818909,ok
+p3_22.png,3,definitive,pct_stretch,0.2,Potato,0.6664655804634094,ok
+p3_23.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.8122925758361816,ok
+p3_24.png,3,definitive,pct_stretch,0.2,Damaged potato,0.5067844986915588,ok
+p3_25.png,3,definitive,pct_stretch,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_26.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.44420742988586426,ok
+p3_27.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.6785628795623779,ok
+p3_28.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.8550640344619751,ok
+p3_29.png,3,definitive,pct_stretch,0.2,Damaged potato,0.4444728493690491,ok
+p3_30.png,3,definitive,pct_stretch,0.2,Diseased-fungal potato,0.8828615546226501,ok

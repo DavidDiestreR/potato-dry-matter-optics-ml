@@ -1,0 +1,31 @@
+image,lot,source,method,thr,pred_class,confidence,status
+p3_1.png,3,definitive,sigmoid,0.2,Potato,0.8710033297538757,ok
+p3_2.png,3,definitive,sigmoid,0.2,Potato,0.8800685405731201,ok
+p3_3.png,3,definitive,sigmoid,0.2,Potato,0.640336811542511,ok
+p3_4.png,3,definitive,sigmoid,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_5.png,3,definitive,sigmoid,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_6.png,3,definitive,sigmoid,0.2,Potato,0.873177707195282,ok
+p3_7.png,3,definitive,sigmoid,0.2,Potato,0.7708526849746704,ok
+p3_8.png,3,definitive,sigmoid,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_9.png,3,definitive,sigmoid,0.2,Potato,0.7458346486091614,ok
+p3_10.png,3,definitive,sigmoid,0.2,Potato,0.8007410168647766,ok
+p3_11.png,3,definitive,sigmoid,0.2,Diseased-fungal potato,0.4557316303253174,ok
+p3_12.png,3,definitive,sigmoid,0.2,Potato,0.7630595564842224,ok
+p3_13.png,3,definitive,sigmoid,0.2,Potato,0.7836707830429077,ok
+p3_14.png,3,definitive,sigmoid,0.2,Potato,0.8236128687858582,ok
+p3_15.png,3,definitive,sigmoid,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_16.png,3,definitive,sigmoid,0.2,Potato,0.8120695948600769,ok
+p3_17.png,3,definitive,sigmoid,0.2,Potato,0.8918888568878174,ok
+p3_18.png,3,definitive,sigmoid,0.2,Potato,0.6309139132499695,ok
+p3_19.png,3,definitive,sigmoid,0.2,Unable to classify,0.0,no_pred_above_thr
+p3_20.png,3,definitive,sigmoid,0.2,Damaged potato,0.5777908563613892,ok
+p3_21.png,3,definitive,sigmoid,0.2,Potato,0.826312243938446,ok
+p3_22.png,3,definitive,sigmoid,0.2,Potato,0.8815354108810425,ok
+p3_23.png,3,definitive,sigmoid,0.2,Potato,0.7664366960525513,ok
+p3_24.png,3,definitive,sigmoid,0.2,Potato,0.41129302978515625,ok
+p3_25.png,3,definitive,sigmoid,0.2,Potato,0.8902019262313843,ok
+p3_26.png,3,definitive,sigmoid,0.2,Potato,0.834201455116272,ok
+p3_27.png,3,definitive,sigmoid,0.2,Potato,0.6333104968070984,ok
+p3_28.png,3,definitive,sigmoid,0.2,Diseased-fungal potato,0.6870704889297485,ok
+p3_29.png,3,definitive,sigmoid,0.2,Potato,0.5980893969535828,ok
+p3_30.png,3,definitive,sigmoid,0.2,Sprouted potato,0.4139662981033325,ok
