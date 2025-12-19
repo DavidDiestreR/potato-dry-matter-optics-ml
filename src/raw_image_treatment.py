@@ -85,6 +85,105 @@ def apply_brightness_and_gamma(
     return pil
 
 
+def apply_sigmoid(
+    image: Union[str, Path, os.PathLike, Image.Image, np.ndarray],
+    k: float = 6.0,
+    mid: float = 0.5,
+    normalize: bool = True,
+) -> Image.Image:
+    """
+    Aplica una corba S (sigmoid) sobre la luminància de la imatge (canal L en LAB).
+
+    La idea és “comprimir” o “estirar” la luminància al voltant d'un punt mig `mid`
+    (en escala [0, 1]) amb pendent `k`.
+
+    Paràmetres
+    ----------
+    image : str | pathlib.Path | PIL.Image.Image | np.ndarray
+        Ruta a la imatge RGB al disc o objecte imatge (PIL / numpy).
+        - Si és RGBA, s'elimina l'alfa.
+        - Si és 2D (gris), es replica a 3 canals.
+    k : float
+        Pendent de la sigmoid (com més gran, més agressiva). Per defecte 6.0.
+    mid : float
+        Punt mig de la sigmoid (en [0, 1]). Per defecte 0.5.
+    normalize : bool
+        Si True, reescala el resultat de la sigmoid a [0, 1] (min-max) per aprofitar
+        tot el rang 0..255 al canal L. Per defecte True.
+
+    Retorna
+    -------
+    PIL.Image.Image
+        Imatge RGB amb la corba sigmoid aplicada a la luminància.
+    """
+
+    def _to_pil_image(img_in: Any) -> Image.Image:
+        """Normalitza input (path/PIL/numpy) a PIL.Image RGB."""
+        if isinstance(img_in, Image.Image):
+            return img_in.convert("RGB")
+
+        if isinstance(img_in, (str, Path, os.PathLike)):
+            return Image.open(str(img_in)).convert("RGB")
+
+        if isinstance(img_in, np.ndarray):
+            arr = img_in
+            if arr.ndim == 2:  # gris -> RGB
+                arr = np.stack([arr, arr, arr], axis=-1)
+
+            if arr.ndim != 3 or arr.shape[2] not in (3, 4):
+                raise ValueError(f"numpy array amb forma invàlida: {arr.shape}")
+
+            if arr.shape[2] == 4:  # RGBA -> RGB
+                arr = arr[:, :, :3]
+
+            if arr.dtype != np.uint8:
+                arr = np.clip(arr, 0, 255).astype(np.uint8)
+
+            return Image.fromarray(arr, mode="RGB")
+
+        raise TypeError("`image` ha de ser str/Path, PIL.Image o numpy.ndarray")
+
+    def _pil_rgb_to_bgr_uint8(pil_img: Image.Image) -> np.ndarray:
+        rgb = np.asarray(pil_img.convert("RGB"), dtype=np.uint8)
+        return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+
+    def _bgr_uint8_to_pil_rgb(bgr: np.ndarray) -> Image.Image:
+        rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        return Image.fromarray(rgb.astype(np.uint8), mode="RGB")
+
+    pil = _to_pil_image(image)
+
+    # -------------------------------------------------------------
+    # 1) RGB -> BGR -> LAB i separació canals
+    # -------------------------------------------------------------
+    bgr = _pil_rgb_to_bgr_uint8(pil)
+    lab = cv2.cvtColor(bgr, cv2.COLOR_BGR2LAB)
+    L, a, b = cv2.split(lab)
+
+    # -------------------------------------------------------------
+    # 2) Sigmoid sobre L (normalitzat a [0,1])
+    # -------------------------------------------------------------
+    x = L.astype(np.float32) / 255.0
+    z = -float(k) * (x - float(mid))
+    z = np.clip(z, -60.0, 60.0)  # estabilitat numèrica
+    y = 1.0 / (1.0 + np.exp(z))
+
+    # Opcional: re-normalitzar perquè ocupi tot el rang 0..255
+    if normalize:
+        y_min = float(y.min())
+        y_max = float(y.max())
+        y = (y - y_min) / (y_max - y_min + 1e-8)
+
+    L2 = np.clip(y * 255.0, 0.0, 255.0).astype(np.uint8)
+
+    # -------------------------------------------------------------
+    # 3) Reconstrucció LAB -> BGR -> RGB
+    # -------------------------------------------------------------
+    lab2 = cv2.merge([L2, a, b])
+    bgr2 = cv2.cvtColor(lab2, cv2.COLOR_LAB2BGR)
+    return _bgr_uint8_to_pil_rgb(bgr2)
+
+
 def potato_defect_classification(image: Any, confidence_threshold: float = 0.40
 ) -> Tuple[str, float, Image.Image]:
     """
