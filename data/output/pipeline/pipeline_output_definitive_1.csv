@@ -1,0 +1,13 @@
+id_mostra,ruta_imatges,Defecte,MS_predita,class_ms
+36,p3_1.png,Potato,21.173422,bona
+48,p3_13.png,Potato,20.892393,bona
+49,p3_14.png,Potato,22.460295,bona
+81,p4_16.png,Potato,17.99996,descartada
+94,p4_29.png,Potato,22.143976,bona
+99,p4_34.png,Potato,21.820742,bona
+141,p5_4.png,Sprouted potato,,descartada
+142,p5_5.png,Sprouted potato,,descartada
+149,p5_12.png,Diseased-fungal potato,,descartada
+174,p6_3.png,Diseased-fungal potato,,descartada
+175,p6_4.png,Unable to classify,,descartada
+176,p6_5.png,Diseased-fungal potato,,descartada

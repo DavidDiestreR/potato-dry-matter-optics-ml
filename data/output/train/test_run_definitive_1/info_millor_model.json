@@ -1,0 +1,27 @@
+{
+  "seed": 42,
+  "arquitectura": [
+    16,
+    8
+  ],
+  "learning_rate": 0.001,
+  "dropout_rate": 0.1,
+  "batch_size": 6,
+  "epochs": 60000,
+  "mape": 0.10368177414644239,
+  "rmse": 2.5893765785238174,
+  "mae": 2.0712992411020132,
+  "r2": 0.059322550214706005,
+  "n_mostres_train": 101,
+  "n_mostres_val": 26,
+  "feature_cols": [
+    "color_promig_R",
+    "color_promig_G",
+    "color_promig_B",
+    "desviaci\u00f3_R",
+    "desviaci\u00f3_G",
+    "desviaci\u00f3_B",
+    "canal_NIR"
+  ],
+  "data_entrenament": "2025-12-20 15:44:50"
+}
