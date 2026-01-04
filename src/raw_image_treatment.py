@@ -288,10 +288,13 @@ def potato_defect_classification(image: Any, confidence_threshold: float = 0.40
         conf = float(pred.get("confidence", 0.0))
         label = f"{cls} | conf={conf:.2f} | thr={thr:.2f}"
 
+        FONT_SIZE = 50
+
         try:
-            font = ImageFont.load_default()
+            font = ImageFont.truetype("DejaVuSans.ttf", FONT_SIZE)
         except Exception:
-            font = None
+            # fallback si no troba la font (Windows/altres)
+            font = ImageFont.load_default()
 
         pad = 4
         if font is not None and hasattr(draw, "textbbox"):
